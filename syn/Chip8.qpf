@@ -1,0 +1,6 @@
+DATE = "15:15:25 November 14, 2019"
+QUARTUS_VERSION = "16.0.2"
+
+# Revisions
+
+PROJECT_REVISION = "Chip8"
