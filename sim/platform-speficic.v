@@ -1,0 +1,1 @@
+`define CLOCK_SPEED 100000

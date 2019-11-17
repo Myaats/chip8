@@ -1,0 +1,1 @@
+`define CLOCK_SPEED 50000000 // 50 MHz
