@@ -35,20 +35,20 @@ module memory_tb;
         mem_read <= 0;
 
         // Write 1-255 on 1-255 addr
-        for (i = 0; i < 255; i++) begin
+        for (i = 0; i < 4096; i++) begin
             mem_write <= 1;
             mem_write_addr <= i;
-            mem_write_data <= i;
+            mem_write_data <= i % 255;
             #2;
             mem_write <= 0;
             #2;
         end
 
         // Read 1-255 on 1-255 addr
-        for (i = 0; i < 255; i++) begin
+        for (i = 0; i < 4096; i++) begin
             mem_read <= 1;
             mem_read_addr <= i;
-            #2 `assert_eq(mem_read_data, i);
+            #2 `assert_eq(mem_read_data, i % 255);
             mem_read <= 0;
             #2;
         end
