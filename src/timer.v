@@ -6,8 +6,8 @@ module timer(input wire clk,
              output wire timer_cpu_tick,
              output wire timer_60hz_tick);
     
-    reg [31:0] timer_cpu_countdown;
-    reg [31:0] timer_60hz_countdown;
+    reg [31:0] timer_cpu_countdown = 0;
+    reg [31:0] timer_60hz_countdown = 0;
     
     parameter TIMER_CPU_TOP  = `CLOCK_SPEED / `CPU_SPEED;
     parameter TIMER_60HZ_TOP = `CLOCK_SPEED / 60;
