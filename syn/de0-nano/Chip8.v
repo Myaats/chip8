@@ -67,6 +67,6 @@ module Chip8(
 //  Structural coding
 //=======================================================
 
-chip8 chip8(.CLK(CLOCK_50));
+chip8 chip8(.clk(CLOCK_50));
 
 endmodule

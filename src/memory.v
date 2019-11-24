@@ -13,7 +13,7 @@ module memory(input wire clk,
     // Zero out the memory
     integer i;
     initial begin
-        for (i = 0; i < MEMORY_SIZE - 1; i = i + 1) begin
+        for (i = 0; i < MEMORY_SIZE; i = i + 1) begin
             mem[i] = 0;
         end
     end
