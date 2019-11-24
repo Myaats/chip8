@@ -3,8 +3,6 @@
 `include "platform-speficic.v"
 `include "utils.v"
 
-`timescale 1us/1us
-
 `define PER_CPU_TICK `CLOCK_SPEED / `CPU_SPEED + 1
 `define PER_64HZ_TICK `CLOCK_SPEED / 60 + 1
 
