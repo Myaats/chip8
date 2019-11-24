@@ -34,7 +34,7 @@ module memory_tb;
         #2 `assert_eq(mem_read_data, 0);
         mem_read <= 0;
 
-        // Write 1-255 on 1-255 addr
+        // Write 0-255 on 0-4095 addrs
         for (i = 0; i < 4096; i++) begin
             mem_write <= 1;
             mem_write_addr <= i;
@@ -44,7 +44,7 @@ module memory_tb;
             #2;
         end
 
-        // Read 1-255 on 1-255 addr
+        // Read 0-255 on 0-4095 addr and assert
         for (i = 0; i < 4096; i++) begin
             mem_read <= 1;
             mem_read_addr <= i;
