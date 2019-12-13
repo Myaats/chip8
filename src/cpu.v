@@ -13,6 +13,7 @@ module cpu(input wire clk,
     reg [15:0] pc = 'h200; // Program counter
     reg [7:0] regs[0:15]; // 16 8-bit registers (V0-VF)
     reg [15:0] reg_i = 0;
+    reg [15:0] stack[0:31]; // 64 bytes stack (but is using 16-bit values internally to hold the pc's natively)
 
     reg [7:0] sp = 0; // Stack pointer
     reg [7:0] dt = 0; // Delay timer
@@ -28,6 +29,7 @@ module cpu(input wire clk,
     reg [7:0] next_vx_reg;
     reg next_carry;
     reg [15:0] next_i_reg;
+    reg [7:0] next_sp;
 
     localparam
         STATE_BEGIN = 0, // Alias to the first state of an cycle
@@ -37,7 +39,8 @@ module cpu(input wire clk,
         STATE_WAIT_CLK = 3,
         STATE_STORE_CARRY_REG = 4,
         STATE_STORE_VX_REG = 5,
-        STATE_STORE_I_REG = 6;
+        STATE_STORE_I_REG = 6,
+        STATE_STORE_SP_REG = 7;
 
     reg[7:0] state = STATE_FETCH_INSTRUCTION_LO;
 
@@ -90,7 +93,9 @@ module cpu(input wire clk,
                     // RET - 00EE
                     // Return from subrutine and pop the top value of the stack and set the program counter to it
                     16'h00EE: begin
-
+                        pc <= stack[sp - 1];
+                        next_sp <= sp - 1;
+                        state <= STATE_STORE_SP_REG;
                     end
 
                     // JP addr - 1nnn
@@ -102,7 +107,10 @@ module cpu(input wire clk,
                     // CALL addr - 2nnn
                     // Puts the current pc value on top of the stack and jumps to the addr
                     16'h2xxx: begin
-
+                        stack[sp] <= pc;
+                        next_sp <= sp + 1;
+                        pc <= nnn;
+                        state <= STATE_STORE_SP_REG;
                     end
 
                     // SE Vx, byte - 3xkk
@@ -346,6 +354,12 @@ module cpu(input wire clk,
             // Store the Vx reg
             STATE_STORE_VX_REG: begin
                 regs[x] = next_vx_reg;
+                state <= STATE_WAIT_CLK;
+            end
+
+            // Store the stack pointer
+            STATE_STORE_SP_REG: begin
+                sp <= next_sp;
                 state <= STATE_WAIT_CLK;
             end
         endcase
