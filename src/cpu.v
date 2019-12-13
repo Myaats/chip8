@@ -9,8 +9,10 @@ module cpu(input wire clk,
            output reg mem_write = 0,
            output reg [11:0] mem_write_addr = 0,
            output reg [7:0] mem_write_data = 0);
-    
+
     reg [15:0] pc = 'h200; // Program counter
+    reg [7:0] regs[0:15]; // 16 8-bit registers (V0-VF)
+    reg [15:0] reg_i = 0;
 
     reg [7:0] sp = 0; // Stack pointer
     reg [7:0] dt = 0; // Delay timer
@@ -18,17 +20,34 @@ module cpu(input wire clk,
 
     reg [15:0] instruction = 0; // Stores the current instruction
     wire [3:0] x = instruction[11:8]; // The X part of the instruction (2nd nibble)
+    wire [3:0] y = instruction[7:4]; // The Y part of the instruciton (3rd nibble)
     wire [7:0] kk = instruction[7:0]; // The kk part of the instruction (last two nibbles)
     wire [11:0] nnn = instruction[11:0]; // The nnn part of the instruction (last three nibbles)
 
-    localparam 
+    // Next vals
+    reg [7:0] next_vx_reg;
+    reg next_carry;
+    reg [15:0] next_i_reg;
+
+    localparam
         STATE_BEGIN = 0, // Alias to the first state of an cycle
         STATE_FETCH_INSTRUCTION_LO = 0, // Load the first byte of the current instruction
         STATE_FETCH_INSTRUCTION_HI = 1, // Load the last byte of the current instruction
         STATE_DECODE_INSTRUCTION = 2, // Decodes the instruction and changes the state accordenly
-        STATE_WAIT_CLK = 3;
+        STATE_WAIT_CLK = 3,
+        STATE_STORE_CARRY_REG = 4,
+        STATE_STORE_VX_REG = 5,
+        STATE_STORE_I_REG = 6;
 
     reg[7:0] state = STATE_FETCH_INSTRUCTION_LO;
+
+    // Initialize all the regs to 0
+    integer i;
+    initial begin
+        for (i = 0; i < 16; i = i + 1) begin
+            regs[i] = 0;
+        end
+    end
 
     always @(posedge clk) begin
         case(state)
@@ -89,114 +108,140 @@ module cpu(input wire clk,
                     // SE Vx, byte - 3xkk
                     // Skips the next instruction if Vx equals kk
                     16'h3xxx: begin
-
+                        if (regs[x] == kk)
+                            pc <= pc + 2;
                     end
 
                     // SNE Vx, byte - 4xkk
                     // Skips the next instruction if Vx is not equal kk
                     16'h4xxx: begin
-
+                        if (regs[x] != kk)
+                            pc <= pc + 2;
                     end
 
                     // SE Vx, Vy - 5xy0
                     // Skips the next instruction if Vx equals Vy
                     16'h5xx0: begin
-
+                        if (regs[x] == regs[y])
+                            pc <= pc + 2;
                     end
 
                     // LD Vx, byte - 6xkk
                     // Vx = kk
                     // Sets register Vx's value to kk
                     16'h6xxx: begin
-
+                        next_vx_reg <= kk;
+                        state <= STATE_STORE_VX_REG;
                     end
 
                     // ADD Vx, byte - 7xkk
                     // Vx = Vx + kk
                     // Sets register Vx's value to Vx + kk
                     16'h7xxx: begin
-
+                        next_vx_reg <= regs[x] + kk;
+                        state <= STATE_STORE_VX_REG;
                     end
 
                     // LD Vx, Vy - 8xy0
                     // Vx = Vy
                     // Sets register Vx's value to Vy
                     16'h8xx0: begin
-
+                        next_vx_reg <= regs[y];
+                        state <= STATE_STORE_VX_REG;
                     end
 
                     // OR Vx, Vy - 8xy1
                     // Vx = Vx OR Vy
                     // Performes bitwise OR on Vx and Vy and stores in in Vx
                     16'h8xx1: begin
-            
+                        next_vx_reg <= regs[x] | regs[y];
+                        state <= STATE_STORE_VX_REG;
                     end
 
                     // AND Vx, Vy - 8xy2
                     // Vx = Vx AND Vy
                     // Performes bitwise AND on Vx and Vy and stores in in Vx
                     16'h8xx2: begin
-            
+                        next_vx_reg <= regs[x] & regs[y];
+                        state <= STATE_STORE_VX_REG;
                     end
 
                     // XOR Vx, Vy - 8xy3
                     // Vx = Vx XOR Vy
                     // Performes bitwise XOR on Vx and Vy and stores in Vx
                     16'h8xx3: begin
-            
+                        next_vx_reg <= regs[x] ^ regs[y];
+                        state <= STATE_STORE_VX_REG;
                     end
 
                     // ADD Vx, Vy - 8xy4
                     // Vx = Vx + Vy, VF = carry
                     // Adding up Vx and Vy and stores the result in Vx, sets VF to 1 on overflow otherwise 0
                     16'h8xx4: begin
-            
+                        next_vx_reg <= regs[x] + regs[y];
+                        // If it has overflown set the carry bit to 1
+                        next_carry <= ((regs[x] + regs[y]) >= 256) ? 1 : 0;
+                        state <= STATE_STORE_CARRY_REG;
                     end
 
                     // SUB Vx, Vy - 8xy5
                     // Vx = Vx - Vy, VF = NOT borrow
                     // Subtracts Vy from Vx and stores the result in in Vx, sets VF to 1 on underflow otherwise 0
                     16'h8xx5: begin
-            
+                        next_vx_reg <= regs[x] - regs[y];
+                        // If it has underflowed set the carry bit to 1
+                        next_carry <= (regs[x] > regs[y]) ? 1 : 0;
+                        state <= STATE_STORE_CARRY_REG;
                     end
 
                     // SHR Vx {, Vy} - 8xy6
                     // Vx = Vx SHR 1
-                    // Sets Vx to Vy shifted right by 1, if the LSB of Vx is 1 then VF is set to 1 otherwise 0. Then Vx is divided by 2.
+                    // Sets Vx to Vy shifted right by 1, if the LSB of Vx is 1 then VF is set to 1 otherwise 0.
                     16'h8xx6: begin
-            
+                        next_vx_reg <= regs[x] >> 1;
+                        // Set the carry to the LSB of the Vx
+                        next_carry <= regs[x][0:0];
+                        state <= STATE_STORE_CARRY_REG;
                     end
 
                     // SUBN Vx, Vy - 8xy7
                     // Vx = Vy - Vx, set VF = NOT borrow
                     // Subtracts Vx from Vy and stores the result in in Vx, sets VF to 1 on underflow otherwise 0
                     16'h8xx7: begin
-
+                        next_vx_reg <= regs[y] - regs[x];
+                        // If it has underflowed set the carry bit to 1
+                        next_carry <= (regs[y] > regs[x]) ? 1 : 0;
+                        state <= STATE_STORE_CARRY_REG;
                     end
 
                     // SHL Vx {, Vy} - 8xy8
                     // Vx = Vx SHL 1
-                    // Sets Vx to Vy shifted left by 1, if the MSB of Vx is 1 then VF is set to 1 otherwise 0. Then Vx is multiplied by 2.
+                    // Sets Vx to Vy shifted left by 1, if the MSB of Vx is 1 then VF is set to 1 otherwise 0.
                     16'h8xx8: begin
-            
+                        next_vx_reg <= regs[x] << 1;
+                        // Set the carry to the LSB of the Vx
+                        next_carry <= regs[x][7:7];
+                        state <= STATE_STORE_CARRY_REG;
                     end
 
                     // SNE Vx, Vy - 9xy0
                     // Skips the next instruction if Vx does not equal Vy
                     16'h9xx0: begin
-            
+                        if (regs[x] != regs[y])
+                            pc <= pc + 2;
                     end
 
                     // LD I, addr - Annn
                     // Sets the value of register I to nnn
                     16'hAxxx: begin
-
+                        next_i_reg <= nnn;
+                        state <= STATE_STORE_I_REG;
                     end
 
                     // JP V0, addr - Bnnn
                     // Sets the program counter to V0 + nnn
                     16'hBxxx: begin
-
+                        pc <= regs[0] + nnn;
                     end
 
                     // RND Vx, byte - Cxkk
@@ -228,7 +273,8 @@ module cpu(input wire clk,
                     // LD Vx, DT - Fx07
                     // Sets Vx to the Delay Timer's value
                     16'hFx07: begin
-
+                        next_vx_reg <= dt;
+                        state <= STATE_STORE_VX_REG;
                     end
 
                     // LD Vx, K - Fx0A
@@ -240,20 +286,21 @@ module cpu(input wire clk,
                     // LD DT, Vx - Fx15
                     // Sets the Delay Timer to Vx
                     16'hFx15: begin
-
+                        dt <= regs[x];
                     end
 
                     // LD ST, Vx - Fx18
                     // Sets the Sound Timer to Vx
                     16'hFx18: begin
-
+                        st <= regs[x];
                     end
 
                     // ADD I, Vx - Fx1E
                     // I = I + Vx
                     // I is set to I + Vx
                     16'hFx1E: begin
-
+                        next_i_reg <= reg_i + regs[x];
+                        state <= STATE_STORE_I_REG;
                     end
 
                     // LD F, Vx - Fx29
@@ -288,6 +335,18 @@ module cpu(input wire clk,
                 if (timer_cpu_tick) begin
                     state <= STATE_BEGIN;
                 end
+            end
+
+            // Store the carry to VF
+            STATE_STORE_CARRY_REG: begin
+                regs['hf] = next_carry;
+                state <= STATE_STORE_VX_REG;
+            end
+
+            // Store the Vx reg
+            STATE_STORE_VX_REG: begin
+                regs[x] = next_vx_reg;
+                state <= STATE_WAIT_CLK;
             end
         endcase
     end
