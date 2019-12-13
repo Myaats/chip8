@@ -2,6 +2,7 @@ module memory(input wire clk,
               input wire read,
               input wire [11:0] read_addr,
               output reg [7:0] read_data = 0,
+              output reg read_ack = 0,
               input wire write,
               input wire [11:0] write_addr,
               input wire [7:0] write_data);
@@ -19,9 +20,13 @@ module memory(input wire clk,
     end
 
     always @(posedge clk) begin
+        // Reset acknowledgement
+        read_ack <= 0;
+
         // Read memory
         if (read) begin
             read_data <= mem[read_addr];
+            read_ack <= 1;
         end
         // Write memory
         if (write) begin

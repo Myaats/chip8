@@ -8,6 +8,7 @@ module memory_tb;
     reg mem_read = 0;
     reg [11:0] mem_read_addr;
     wire [7:0] mem_read_data;
+    wire mem_read_ack;
     reg mem_write = 0;
     reg [11:0] mem_write_addr;
     reg [7:0] mem_write_data;
@@ -16,6 +17,7 @@ module memory_tb;
     .read(mem_read),
     .read_addr(mem_read_addr),
     .read_data(mem_read_data),
+    .read_ack(mem_read_ack),
     .write(mem_write),
     .write_addr(mem_write_addr),
     .write_data(mem_write_data));
@@ -31,24 +33,31 @@ module memory_tb;
         // Read offset 0
         mem_read <= 1;
         mem_read_addr <= 0;
-        #2 `assert_eq(mem_read_data, 0);
+        #2;
+        `assert_eq(mem_read_data, 0);
+        `assert_eq(mem_read_ack, 1);
         mem_read <= 0;
+        #2;
 
         // Write 0-255 on 0-4095 addrs
         for (i = 0; i < 4096; i++) begin
             mem_write <= 1;
             mem_write_addr <= i;
             mem_write_data <= i % 255;
+            `assert_eq(mem_read_ack, 0);
             #2;
             mem_write <= 0;
+            `assert_eq(mem_read_ack, 0);
             #2;
         end
 
         // Read 0-255 on 0-4095 addr and assert
         for (i = 0; i < 4096; i++) begin
+            `assert_eq(mem_read_ack, 0);
             mem_read <= 1;
             mem_read_addr <= i;
             #2 `assert_eq(mem_read_data, i % 255);
+            `assert_eq(mem_read_ack, 1);
             mem_read <= 0;
             #2;
         end
