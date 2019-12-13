@@ -5,7 +5,7 @@ module cpu(input wire clk,
     // TODO: Should this be set from another place?
     reg [15:0] instruction = 0;
     
-    reg [15:0] pc = 0; // Program counter
+    reg [15:0] pc = 'h200; // Program counter
 
     reg [7:0] sp = 0; // Stack pointer
     reg [7:0] dt = 0; // Delay timer
