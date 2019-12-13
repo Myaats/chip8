@@ -4,7 +4,7 @@
 `include "utils.v"
 
 `define PER_CPU_TICK `CLOCK_SPEED / `CPU_SPEED + 1
-`define PER_64HZ_TICK `CLOCK_SPEED / 60 + 1
+`define PER_60HZ_TICK `CLOCK_SPEED / 60 + 1
 
 module timer_tb;
     reg clk = 0;
@@ -33,7 +33,7 @@ module timer_tb;
             #2 should_cpu_tick = i % $unsigned(`PER_CPU_TICK) == 0;
             `assert_eq(timer_cpu_tick, should_cpu_tick);
             // Check that the 60Hz timer ticked
-            should_60hz_tick = i % $unsigned(`PER_64HZ_TICK) == 0;
+            should_60hz_tick = i % $unsigned(`PER_60HZ_TICK) == 0;
             `assert_eq(timer_60hz_tick, should_60hz_tick);
         end
 
