@@ -31,4 +31,4 @@ test:
 
 .PHONY: clean
 clean:
-	rm -f build/*
+	rm -rf ./build/
