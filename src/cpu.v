@@ -1,3 +1,5 @@
+`include "cpu_bcd.v"
+
 module cpu(input wire clk,
            input wire timer_cpu_tick,
            input wire timer_60hz_tick,
@@ -31,6 +33,12 @@ module cpu(input wire clk,
     reg [15:0] next_i_reg;
     reg [7:0] next_sp;
 
+    // BCD
+    reg [7:0] bcd_input = 0;
+    wire [3:0] bcd_hundreds;
+    wire [3:0] bcd_tens;
+    wire [3:0] bcd_ones;
+
     localparam
         STATE_BEGIN = 0, // Alias to the first state of an cycle
         STATE_FETCH_INSTRUCTION_LO = 0, // Load the first byte of the current instruction
@@ -40,7 +48,10 @@ module cpu(input wire clk,
         STATE_STORE_CARRY_REG = 4,
         STATE_STORE_VX_REG = 5,
         STATE_STORE_I_REG = 6,
-        STATE_STORE_SP_REG = 7;
+        STATE_STORE_SP_REG = 7,
+        STATE_STORE_BCD1 = 8,
+        STATE_STORE_BCD2 = 9,
+        STATE_STORE_BCD3 = 10;
 
     reg[7:0] state = STATE_FETCH_INSTRUCTION_LO;
 
@@ -53,17 +64,22 @@ module cpu(input wire clk,
     end
 
     always @(posedge clk) begin
+        // Reset these
+        mem_read = 0;
+        mem_write = 0;
+
         case(state)
             // Loads the first byte of the instruction, takes approx two cycles
             STATE_FETCH_INSTRUCTION_LO: begin
                 if (mem_read_ack) begin
-                    mem_read <= 0;
-                    state <= STATE_FETCH_INSTRUCTION_HI;
+                    mem_read = 0;
                     // Load it into the instruction register
                     instruction[15:8] = mem_read_data;
+
+                    state <= STATE_FETCH_INSTRUCTION_HI;
                 end else begin
-                    mem_read_addr <= pc;
-                    mem_read <= 1;
+                    mem_read_addr = pc;
+                    mem_read = 1;
                 end
             end
 
@@ -75,7 +91,7 @@ module cpu(input wire clk,
                     instruction[7:0] = mem_read_data;
                 end else begin
                     mem_read_addr <= pc + 1;
-                    mem_read <= 1;
+                    mem_read = 1;
                 end
             end
 
@@ -320,7 +336,8 @@ module cpu(input wire clk,
                     // LD B, Vx - Fx33
                     // Stores the binary coded decimal value of Vx in I, I + 1 and I + 2
                     16'hF?33: begin
-
+                        bcd_input <= regs[x];
+                        state <= STATE_STORE_BCD1;
                     end
 
                     // LD [I], Vx - Fx55
@@ -362,6 +379,31 @@ module cpu(input wire clk,
                 sp <= next_sp;
                 state <= STATE_WAIT_CLK;
             end
+
+            STATE_STORE_BCD1: begin
+                mem_write = 1;
+                mem_write_addr <= reg_i;
+                mem_write_data <= bcd_hundreds;
+                state <= STATE_STORE_BCD2;
+            end
+
+            STATE_STORE_BCD2: begin
+                mem_write_addr <= reg_i + 1;
+                mem_write_data <= bcd_tens;
+                state <= STATE_STORE_BCD3;
+            end
+
+            STATE_STORE_BCD3: begin
+                mem_write_addr <= reg_i + 2;
+                mem_write_data <= bcd_ones;
+                state <= STATE_WAIT_CLK;
+            end
         endcase
     end
+
+    // BCD module
+    cpu_bcd bcd(.binary(bcd_input),
+    .hundreds(bcd_hundreds),
+    .tens(bcd_tens),
+    .ones(bcd_ones));
 endmodule
