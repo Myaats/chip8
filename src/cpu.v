@@ -39,6 +39,12 @@ module cpu(input wire clk,
     wire [3:0] bcd_tens;
     wire [3:0] bcd_ones;
 
+    // Memory store / read ops
+    reg [7:0] memory_counter; // countdown from offset
+    reg [15:0] memory_offset;
+    reg [3:0] memory_reg_len;
+    reg [3:0] memory_reg_end;
+
     localparam
         STATE_BEGIN = 0, // Alias to the first state of an cycle
         STATE_FETCH_INSTRUCTION_LO = 0, // Load the first byte of the current instruction
@@ -51,7 +57,9 @@ module cpu(input wire clk,
         STATE_STORE_SP_REG = 7,
         STATE_STORE_BCD1 = 8,
         STATE_STORE_BCD2 = 9,
-        STATE_STORE_BCD3 = 10;
+        STATE_STORE_BCD3 = 10,
+        STATE_STORE_MEMORY = 11,
+        STATE_LOAD_MEMORY = 12;
 
     reg[7:0] state = STATE_FETCH_INSTRUCTION_LO;
 
@@ -343,13 +351,19 @@ module cpu(input wire clk,
                     // LD [I], Vx - Fx55
                     // Stores V0 to Vx starting at reg I's value, I is then set to I + x + 1
                     16'hF?55: begin
-
+                        memory_offset = reg_i;
+                        memory_counter = x;
+                        memory_reg_len = x;
+                        state <= STATE_STORE_MEMORY;
                     end
 
                     // LD Vx, [I] - Fx65
-                    // Filles V0 to Vx with memory storaed at reg I's value, I is then set to I + x + 1
+                    // Filles V0 to Vx with memory stored at reg I's value, I is then set to I + x + 1
                     16'hF?65: begin
-
+                        memory_offset = reg_i;
+                        memory_counter = x;
+                        memory_reg_len = x;
+                        state <= STATE_LOAD_MEMORY;
                     end
                 endcase
             end
@@ -358,6 +372,7 @@ module cpu(input wire clk,
             STATE_WAIT_CLK: begin
                 // Start a new state cycle
                 if (timer_cpu_tick) begin
+                    memory_counter = 0;
                     state <= STATE_BEGIN;
                 end
             end
@@ -397,6 +412,34 @@ module cpu(input wire clk,
                 mem_write_addr <= reg_i + 2;
                 mem_write_data <= bcd_ones;
                 state <= STATE_WAIT_CLK;
+            end
+
+            STATE_STORE_MEMORY: begin
+                mem_write <= 1;
+                mem_write_addr <= reg_i - memory_counter;
+                mem_write_data <= regs[memory_counter];
+                memory_counter <= memory_counter - 1;
+
+                if (memory_counter == 0) begin
+                    next_i_reg = reg_i + memory_reg_len + 1;
+                    state <= STATE_STORE_I_REG;
+                end
+            end
+
+            STATE_LOAD_MEMORY: begin
+                if (memory_counter == 0) begin
+                    next_i_reg = reg_i + memory_reg_len + 1;
+                    regs[0] = mem_read_data;
+                    state <= STATE_STORE_I_REG;
+                end else begin
+                    mem_read <= 1;
+                    mem_read_addr <= reg_i - memory_counter;
+                    memory_counter <= memory_counter - 1;
+
+                    if (memory_counter != memory_reg_len) begin
+                        regs[memory_counter] = mem_read_data;
+                    end
+                end
             end
         endcase
     end
