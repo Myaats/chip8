@@ -1,4 +1,5 @@
 `include "cpu_bcd.v"
+`include "cpu_rng.v"
 
 module cpu(input wire clk,
            input wire timer_cpu_tick,
@@ -38,6 +39,9 @@ module cpu(input wire clk,
     wire [3:0] bcd_hundreds;
     wire [3:0] bcd_tens;
     wire [3:0] bcd_ones;
+
+    // RNG
+    wire [30:0] rng_value;
 
     // Memory store / read ops
     reg [7:0] memory_counter; // countdown from offset
@@ -280,7 +284,8 @@ module cpu(input wire clk,
                     // Vx = (RANDOM BYTE) AND kk
                     // Sets Vx to a random byte bitwise AND'd to kk
                     16'hC???: begin
-
+                        next_vx_reg <= rng_value[7:0] & kk;
+                        state <= STATE_STORE_VX_REG;
                     end
 
                     // DRW Vx, Vy, nibble - Dxyn
@@ -449,4 +454,8 @@ module cpu(input wire clk,
     .hundreds(bcd_hundreds),
     .tens(bcd_tens),
     .ones(bcd_ones));
+
+    // RNG module
+    cpu_rng rng(.clk(clk),
+    .value(rng_value));
 endmodule
