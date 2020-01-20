@@ -1,4 +1,5 @@
 `include "cpu.v"
+`include "keypad.v"
 `include "memory.v"
 `include "timer.v"
 
@@ -15,6 +16,11 @@ module chip8(input wire clk);
     // Timer tick wires
     wire timer_cpu_tick;
     wire timer_60hz_tick;
+
+    // Keypad wires
+    wire [3:0] keypad_column;
+    wire [3:0] keypad_row;
+    wire [15:0] keypad_value;
 
     // Components
     // Main CPU
@@ -42,4 +48,9 @@ module chip8(input wire clk);
     timer timer(.clk(clk),
     .timer_cpu_tick(timer_cpu_tick),
     .timer_60hz_tick(timer_60hz_tick));
+    // Keypad
+    keypad keypad(.clk(clk),
+    .column(keypad_column),
+    .row(keypad_row),
+    .value(keypad_value));
 endmodule
