@@ -4,6 +4,7 @@
 module cpu(input wire clk,
            input wire timer_cpu_tick,
            input wire timer_60hz_tick,
+           input wire [15:0] keypad_value,
            // Memory
            output reg mem_read = 0,
            output reg [11:0] mem_read_addr = 0,
@@ -63,7 +64,8 @@ module cpu(input wire clk,
         STATE_STORE_BCD2 = 9,
         STATE_STORE_BCD3 = 10,
         STATE_STORE_MEMORY = 11,
-        STATE_LOAD_MEMORY = 12;
+        STATE_LOAD_MEMORY = 12,
+        STATE_HALT_UNTIL_PRESS = 13;
 
     reg[7:0] state = STATE_FETCH_INSTRUCTION_LO;
 
@@ -298,13 +300,15 @@ module cpu(input wire clk,
                     // SKP Vx - Ex9E
                     // Skips the next instruction if the key of register Vx's value is currently down
                     16'hE?9E: begin
-
+                        if (keypad_value & (1 << (regs[x] - 1)))
+                            pc <= pc + 2;
                     end
 
                     // SKNP Vx - ExA1
                     // Skips the next instruction if the key of register Vx's value is currently up
                     16'hE?A1: begin
-
+                        if (!(keypad_value & (1 << (regs[x] - 1))))
+                            pc <= pc + 2;
                     end
 
                     // LD Vx, DT - Fx07
@@ -317,7 +321,7 @@ module cpu(input wire clk,
                     // LD Vx, K - Fx0A
                     // Halts all execution until a key is pressed and stores it in Vx
                     16'hF?0A: begin
-
+                        state <= STATE_HALT_UNTIL_PRESS;
                     end
 
                     // LD DT, Vx - Fx15
@@ -445,6 +449,11 @@ module cpu(input wire clk,
                         regs[memory_counter] = mem_read_data;
                     end
                 end
+            end
+
+            STATE_HALT_UNTIL_PRESS: begin
+                if (keypad_value & (1 << (regs[x] - 1)))
+                    state <= STATE_WAIT_CLK;
             end
         endcase
     end

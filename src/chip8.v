@@ -27,6 +27,7 @@ module chip8(input wire clk);
     cpu cpu(.clk(clk),
     .timer_cpu_tick(timer_cpu_tick),
     .timer_60hz_tick(timer_60hz_tick),
+    .keypad_value(keypad_value),
     // CPU Memory
     .mem_read(mem_read),
     .mem_read_addr(mem_read_addr),
