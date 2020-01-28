@@ -4,6 +4,7 @@
 module cpu(input wire clk,
            input wire timer_cpu_tick,
            input wire timer_60hz_tick,
+           input wire gpu_ready,
            input wire [15:0] keypad_value,
            // Memory
            output reg mem_read = 0,
@@ -12,7 +13,10 @@ module cpu(input wire clk,
            input wire mem_read_ack,
            output reg mem_write = 0,
            output reg [11:0] mem_write_addr = 0,
-           output reg [7:0] mem_write_data = 0);
+           output reg [7:0] mem_write_data = 0,
+            // GPU
+            output reg [15:0] gpu_cmd = 0,
+            output reg gpu_cmd_submitted = 0);
 
     reg [15:0] pc = 'h200; // Program counter
     reg [7:0] regs[0:15]; // 16 8-bit registers (V0-VF)
@@ -65,7 +69,9 @@ module cpu(input wire clk,
         STATE_STORE_BCD3 = 10,
         STATE_STORE_MEMORY = 11,
         STATE_LOAD_MEMORY = 12,
-        STATE_HALT_UNTIL_PRESS = 13;
+        STATE_HALT_UNTIL_PRESS = 13,
+        STATE_SUBMIT_GPU_CMD = 14,
+        STATE_WAIT_FOR_GPU = 15;
 
     reg[7:0] state = STATE_FETCH_INSTRUCTION_LO;
 
@@ -453,6 +459,17 @@ module cpu(input wire clk,
 
             STATE_HALT_UNTIL_PRESS: begin
                 if (keypad_value & (1 << (regs[x] - 1)))
+                    state <= STATE_WAIT_CLK;
+            end
+
+            STATE_SUBMIT_GPU_CMD: begin
+                gpu_cmd_submitted <= 1;
+                state <= STATE_WAIT_FOR_GPU;
+            end
+
+            STATE_WAIT_FOR_GPU: begin
+                gpu_cmd_submitted <= 0;
+                if (gpu_ready)
                     state <= STATE_WAIT_CLK;
             end
         endcase
