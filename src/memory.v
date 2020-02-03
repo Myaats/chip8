@@ -12,7 +12,7 @@ module memory(input wire clk,
     reg [7:0] mem[0:MEMORY_SIZE - 1];
 
     // Put the font data in the upper part of the reserved memory
-    initial $readmemh("assets/font.bin", mem, 'h1b0, 'h1ff);
+    initial $readmemb("assets/font.bin", mem, 'h1b0, 'h1ff);
 
     always @(posedge clk) begin
         // Reset acknowledgement
