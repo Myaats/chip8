@@ -1,5 +1,9 @@
 module gpu(input wire clk,
-           input wire [15:0] gpu_cmd,
+           input wire [3:0] gpu_cmd,
+           input wire [15:0] gpu_draw_offset,
+           input wire [7:0] gpu_draw_x,
+           input wire [7:0] gpu_draw_y,
+           input wire [7:0] gpu_draw_length,
            input wire gpu_cmd_submitted,
            output wire gpu_ready);
 

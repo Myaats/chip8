@@ -1,5 +1,6 @@
 `include "cpu_bcd.v"
 `include "cpu_rng.v"
+`include "gpu_cmd.v"
 
 module cpu(input wire clk,
            input wire timer_cpu_tick,
@@ -14,9 +15,13 @@ module cpu(input wire clk,
            output reg mem_write = 0,
            output reg [11:0] mem_write_addr = 0,
            output reg [7:0] mem_write_data = 0,
-            // GPU
-            output reg [15:0] gpu_cmd = 0,
-            output reg gpu_cmd_submitted = 0);
+           // GPU
+           output reg [3:0] gpu_cmd = 0,
+           output reg [15:0] gpu_draw_offset = 0,
+           output reg [7:0] gpu_draw_x = 0,
+           output reg [7:0] gpu_draw_y = 0,
+           output reg [7:0] gpu_draw_length = 0,
+           output reg gpu_cmd_submitted = 0);
 
     reg [15:0] pc = 'h200; // Program counter
     reg [7:0] regs[0:15]; // 16 8-bit registers (V0-VF)
@@ -30,6 +35,7 @@ module cpu(input wire clk,
     reg [15:0] instruction = 0; // Stores the current instruction
     wire [3:0] x = instruction[11:8]; // The X part of the instruction (2nd nibble)
     wire [3:0] y = instruction[7:4]; // The Y part of the instruciton (3rd nibble)
+    wire [3:0] z = instruction[3:0]; // The Y part of the instruciton (3rd nibble)
     wire [7:0] kk = instruction[7:0]; // The kk part of the instruction (last two nibbles)
     wire [11:0] nnn = instruction[11:0]; // The nnn part of the instruction (last three nibbles)
 
@@ -123,7 +129,8 @@ module cpu(input wire clk,
                 casez(instruction)
                     // CLS - 00E0 - Clear the display
                     16'h00E0: begin
-
+                        gpu_cmd <= `GPU_CMD_CLEAR;
+                        state <= STATE_SUBMIT_GPU_CMD;
                     end
 
                     // RET - 00EE
@@ -300,7 +307,12 @@ module cpu(input wire clk,
                     // Draws a n byte long sprite located at the I reg memory location at (Vx, Xy). Pixels are copied XOR to detect collisions, if
                     // something collides set VF to 1 otherwise 0. If pixels are outside of the framebuffer will it wrap over to the other side
                     16'hD???: begin
-
+                        gpu_cmd <= `GPU_CMD_DRAW;
+                        gpu_draw_offset <= reg_i;
+                        gpu_draw_length <= z;
+                        gpu_draw_x <= regs[x];
+                        gpu_draw_y <= regs[y];
+                        state <= STATE_SUBMIT_GPU_CMD;
                     end
 
                     // SKP Vx - Ex9E
@@ -353,7 +365,8 @@ module cpu(input wire clk,
                     // LD F, Vx - Fx29
                     // Sets register I to the location of sprite digit Vx.
                     16'hF?29: begin
-
+                        next_i_reg <= 'h1b0 + (regs[x] * 5);
+                        state <= STATE_STORE_I_REG;
                     end
 
                     // LD B, Vx - Fx33
