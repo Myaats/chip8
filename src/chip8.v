@@ -3,8 +3,19 @@
 `include "keypad.v"
 `include "memory.v"
 `include "timer.v"
+`include "vga.v"
 
-module chip8(input wire clk);
+module chip8(input wire clk,
+             // Keypad
+             output wire [3:0] keypad_column,
+             input wire [3:0] keypad_row,
+             // VGA wires
+             output wire [3:0] vga_r,
+             output wire [3:0] vga_g,
+             output wire [3:0] vga_b,
+             output wire vga_vsync,
+             output wire vga_hsync);
+
     // GPU Wires
     wire [3:0] gpu_cmd;
     wire [15:0] gpu_draw_offset;
@@ -26,10 +37,9 @@ module chip8(input wire clk);
     // Timer tick wires
     wire timer_cpu_tick;
     wire timer_60hz_tick;
+    wire timer_vga_tick;
 
     // Keypad wires
-    wire [3:0] keypad_column;
-    wire [3:0] keypad_row;
     wire [15:0] keypad_value;
 
     // Components
@@ -73,11 +83,22 @@ module chip8(input wire clk);
     // Hardware timer to send cycle ticks to the cpu
     timer timer(.clk(clk),
     .timer_cpu_tick(timer_cpu_tick),
-    .timer_60hz_tick(timer_60hz_tick));
+    .timer_60hz_tick(timer_60hz_tick),
+    .timer_vga_tick(timer_vga_tick));
 
     // Keypad
     keypad keypad(.clk(clk),
     .column(keypad_column),
     .row(keypad_row),
     .value(keypad_value));
+
+    // VGA
+    vga vga(.clk(clk),
+    .timer_vga_tick(timer_vga_tick),
+    .vga_r(vga_r),
+    .vga_g(vga_g),
+    .vga_b(vga_b),
+    .vga_vsync(vga_vsync),
+    .vga_hsync(vga_hsync));
+
 endmodule

@@ -60,13 +60,23 @@ module Chip8(
 //  REG/WIRE declarations
 //=======================================================
 
+wire [3:0] keypad_column;
+wire [3:0] keypad_row;
 
+//=======================================================
+//  Assignments
+//=======================================================
 
+assign GPIO2[3:0] = keypad_column;
+assign keypad_row[3:2] = GPIO1_IN;
+assign keypad_row[1:0] = GPIO2_IN;
 
 //=======================================================
 //  Structural coding
 //=======================================================
 
-chip8 chip8(.clk(CLOCK_50));
+chip8 chip8(.clk(CLOCK_50),
+	.keypad_column(keypad_column),
+	.keypad_row(keypad_row));
 
 endmodule
