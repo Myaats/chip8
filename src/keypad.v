@@ -15,7 +15,7 @@ module keypad(input wire clk,
             value[i * 4 + current_column] <= row[i] == 1;
         end
 
-        current_column <= (current_column + 1) % 4;
+        current_column <= (current_column + 1) % 3;
         column <= 0;
         column[current_column] <= 1;
     end
