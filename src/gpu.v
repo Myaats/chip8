@@ -1,3 +1,5 @@
+`include "gpu_cmd.v"
+
 module gpu(input wire clk,
            input wire [3:0] gpu_cmd,
            input wire [15:0] gpu_draw_offset,
@@ -11,7 +13,8 @@ module gpu(input wire clk,
     localparam
         STATE_WAIT_FOR_CMD = 0,
         STATE_DECODE_CMD = 1, 
-        STATE_CLEARING = 2;
+        STATE_CLEARING = 2,
+        STATE_DRAWING = 3;
 
     reg[7:0] state = STATE_WAIT_FOR_CMD;
 
@@ -26,9 +29,19 @@ module gpu(input wire clk,
                 end
             end
             STATE_DECODE_CMD: begin
-
+                case(gpu_cmd)
+                    `GPU_CMD_CLEAR: begin
+                        state <= STATE_DECODE_CMD;
+                    end
+                    `GPU_CMD_DRAW: begin
+                        state <= STATE_DRAWING;
+                    end
+                endcase
             end
             STATE_CLEARING: begin
+
+            end
+            STATE_DRAWING: begin
 
             end
         endcase
