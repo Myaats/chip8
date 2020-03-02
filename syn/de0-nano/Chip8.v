@@ -63,6 +63,12 @@ module Chip8(
 wire [3:0] keypad_column;
 wire [3:0] keypad_row;
 
+wire [3:0] vga_r;
+wire [3:0] vga_g;
+wire [3:0] vga_b;
+wire vga_vsync;
+wire vga_hsync;
+
 //=======================================================
 //  Assignments
 //=======================================================
@@ -71,12 +77,29 @@ assign GPIO2[3:0] = keypad_column;
 assign keypad_row[3:2] = GPIO1_IN;
 assign keypad_row[1:0] = GPIO2_IN;
 
+// VGA Red
+assign GPIO1[1:0] = vga_r[1:0];
+assign GPIO1[3] = vga_r[2];
+assign GPIO1[5] = vga_r[3];
+// VGA Green
+assign GPIO1[11:8] = vga_g;
+// VGA Blue
+assign GPIO1[17:14] = vga_b;
+// VGA Sync
+assign GPIO1[20] = vga_hsync;
+assign GPIO1[21] = vga_vsync;
+
 //=======================================================
 //  Structural coding
 //=======================================================
 
 chip8 chip8(.clk(CLOCK_50),
 	.keypad_column(keypad_column),
-	.keypad_row(keypad_row));
+	.keypad_row(keypad_row),
+	.vga_r(vga_r),
+	.vga_g(vga_g),
+	.vga_b(vga_b),
+	.vga_vsync(vga_vsync),
+	.vga_hsync(vga_hsync));
 
 endmodule
