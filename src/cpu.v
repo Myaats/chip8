@@ -21,7 +21,8 @@ module cpu(input wire clk,
            output reg [7:0] gpu_draw_x = 0,
            output reg [7:0] gpu_draw_y = 0,
            output reg [7:0] gpu_draw_length = 0,
-           output reg gpu_cmd_submitted = 0);
+           output reg gpu_cmd_submitted = 0,
+           input wire gpu_collision);
 
     reg [15:0] pc = 'h200; // Program counter
     reg [7:0] regs[0:15]; // 16 8-bit registers (V0-VF)
@@ -482,8 +483,10 @@ module cpu(input wire clk,
 
             STATE_WAIT_FOR_GPU: begin
                 gpu_cmd_submitted <= 0;
-                if (gpu_ready)
+                if (gpu_ready) begin
                     state <= STATE_WAIT_CLK;
+                    regs['hf] = gpu_collision;
+                end
             end
         endcase
     end

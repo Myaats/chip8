@@ -23,6 +23,7 @@ module chip8(input wire clk,
     wire [7:0] gpu_draw_y;
     wire [7:0] gpu_draw_length;
     wire gpu_cmd_submitted;
+    wire gpu_collision;
     wire gpu_ready;
 
     // Memory data
@@ -55,6 +56,7 @@ module chip8(input wire clk,
     .gpu_draw_y(gpu_draw_y),
     .gpu_draw_length(gpu_draw_length),
     .gpu_cmd_submitted(gpu_cmd_submitted),
+    .gpu_collision(gpu_collision),
     .gpu_ready(gpu_ready),
     // CPU Memory
     .mem_read(mem_read),
@@ -67,7 +69,12 @@ module chip8(input wire clk,
 
     gpu gpu(.clk(clk),
     .gpu_cmd(gpu_cmd),
+    .gpu_draw_offset(gpu_draw_offset),
+    .gpu_draw_x(gpu_draw_x),
+    .gpu_draw_y(gpu_draw_y),
+    .gpu_draw_length(gpu_draw_length),
     .gpu_cmd_submitted(gpu_cmd_submitted),
+    .gpu_collision(gpu_collision),
     .gpu_ready(gpu_ready));
 
     // Memory

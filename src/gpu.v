@@ -5,6 +5,7 @@ module gpu(input wire clk,
            input wire [7:0] gpu_draw_y,
            input wire [7:0] gpu_draw_length,
            input wire gpu_cmd_submitted,
+           output reg gpu_collision,
            output wire gpu_ready);
 
     localparam
