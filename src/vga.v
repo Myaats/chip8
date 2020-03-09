@@ -28,7 +28,7 @@ module vga(input wire clk,
         if (horizontal_count == `VGA_HORIZONTAL_TOTAL_SIZE) begin
             horizontal_count <= 0;
 
-             // Reset the vertical counter when reaching the width + blanking size
+             // Reset the vertical counter when reaching the height + blanking size
             if (vertical_count == `VGA_VERTICAL_TOTAL_SIZE) begin
                 vertical_count <= 0;
 
