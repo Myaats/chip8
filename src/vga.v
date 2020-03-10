@@ -14,14 +14,23 @@ module vga(input wire clk,
            output reg [3:0] vga_g,
            output reg [3:0] vga_b,
 
+           output wire memory_read,
+           output reg [11:0] memory_addr,
+           input wire [7:0] memory_data,
+
            output wire vga_hsync,
            output wire vga_vsync);
 
     reg [15:0] horizontal_count;
     reg [15:0] vertical_count;
 
+    wire drawing;
+
     assign vga_hsync = horizontal_count == `VGA_HORIZONTAL_TOTAL_SIZE;
     assign vga_vsync = vertical_count == `VGA_VERTICAL_TOTAL_SIZE;
+
+    assign drawing = horizontal_count < `VGA_HORIZONTAL_SIZE && vertical_count < `VGA_VERTICAL_SIZE;
+    assign memory_read = drawing;
 
     always @(posedge timer_vga_tick) begin
         // Reset the horizontal counter when reaching the width + blanking size

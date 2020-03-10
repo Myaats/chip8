@@ -11,7 +11,7 @@ module gpu(input wire clk,
            input wire [7:0] gpu_draw_y,
            input wire gpu_cmd_submitted,
            output reg gpu_collision = 0,
-           output wire gpu_ready = 1,
+           output wire gpu_ready,
            // Memory
            output reg gpu_mem_read = 0,
            output reg [11:0] gpu_mem_read_addr = 12'b0,

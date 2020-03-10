@@ -13,7 +13,12 @@ module memory(input wire clk,
               output reg gpu_read_ack = 0,
               input wire gpu_write,
               input wire [11:0] gpu_write_addr,
-              input wire [7:0] gpu_write_data);
+              input wire [7:0] gpu_write_data,
+              // VGA data
+              input wire vga_memory_read,
+              input wire [11:0] vga_memory_addr,
+              output reg [7:0] vga_memory_data
+           );
 
     parameter MEMORY_SIZE = 4096;
 

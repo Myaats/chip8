@@ -48,6 +48,11 @@ module chip8(input wire clk,
     wire timer_60hz_tick;
     wire timer_vga_tick;
 
+    // VGA wires
+    wire vga_mem_read;
+    wire [11:0] vga_mem_addr;
+    wire [7:0] vga_mem_data;
+
     // Keypad wires
     wire [15:0] keypad_value;
 
@@ -107,7 +112,10 @@ module chip8(input wire clk,
     .gpu_read_ack(gpu_mem_read_ack),
     .gpu_write(gpu_mem_write),
     .gpu_write_addr(gpu_mem_write_addr),
-    .gpu_write_data(gpu_mem_write_data));
+    .gpu_write_data(gpu_mem_write_data),
+    .vga_memory_read(vga_mem_read),
+    .vga_memory_addr(vga_mem_addr),
+    .vga_memory_data(vga_mem_data));
 
     // Hardware timer to send cycle ticks to the cpu
     timer timer(.clk(clk),
@@ -128,6 +136,9 @@ module chip8(input wire clk,
     .vga_g(vga_g),
     .vga_b(vga_b),
     .vga_vsync(vga_vsync),
-    .vga_hsync(vga_hsync));
+    .vga_hsync(vga_hsync),
+    .memory_read(vga_mem_read),
+    .memory_addr(vga_mem_addr),
+    .memory_data(vga_mem_data));
 
 endmodule
