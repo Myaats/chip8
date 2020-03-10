@@ -113,9 +113,9 @@ module chip8(input wire clk,
     .gpu_write(gpu_mem_write),
     .gpu_write_addr(gpu_mem_write_addr),
     .gpu_write_data(gpu_mem_write_data),
-    .vga_memory_read(vga_mem_read),
-    .vga_memory_addr(vga_mem_addr),
-    .vga_memory_data(vga_mem_data));
+    .vga_read(vga_mem_read),
+    .vga_addr(vga_mem_addr),
+    .vga_data(vga_mem_data));
 
     // Hardware timer to send cycle ticks to the cpu
     timer timer(.clk(clk),
