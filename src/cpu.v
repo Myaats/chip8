@@ -17,7 +17,7 @@ module cpu(input wire clk,
            output reg [7:0] mem_write_data = 0,
            // GPU
            output reg [3:0] gpu_cmd = 0,
-           output reg [15:0] gpu_draw_offset = 0,
+           output reg [11:0] gpu_draw_offset = 0,
            output reg [7:0] gpu_draw_x = 0,
            output reg [7:0] gpu_draw_y = 0,
            output reg [7:0] gpu_draw_length = 0,

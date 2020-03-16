@@ -18,7 +18,7 @@ module chip8(input wire clk,
 
     // GPU Wires
     wire [3:0] gpu_cmd;
-    wire [15:0] gpu_draw_offset;
+    wire [11:0] gpu_draw_offset;
     wire [7:0] gpu_draw_x;
     wire [7:0] gpu_draw_y;
     wire [7:0] gpu_draw_length;
