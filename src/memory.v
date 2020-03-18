@@ -1,3 +1,7 @@
+`define GPU_FRAMEBUFFER_OFFSET 'h100
+`define GPU_FRAMEBUFFER_LENGTH 'hFF
+`define GPU_FRAMEBUFFER_END (`GPU_FRAMEBUFFER_OFFSET + `GPU_FRAMEBUFFER_LENGTH)
+
 module memory(input wire clk,
               input wire read,
               input wire [11:0] read_addr,
@@ -27,6 +31,7 @@ module memory(input wire clk,
     // Put the font data in the upper part of the reserved memory
     initial $readmemh("assets/font.hex", mem, 'h14, 'h99);
 
+    // Main memory
     always @(posedge clk) begin
         // Reset acknowledgement
         read_ack <= 0;
@@ -37,19 +42,20 @@ module memory(input wire clk,
             read_data <= mem[read_addr];
             read_ack <= 1;
         end
+
         if (gpu_read) begin
             gpu_read_data <= mem[gpu_read_addr];
             gpu_read_ack <= 1;
         end
+
         if (vga_read) begin
-            vga_data = mem[vga_addr];
+            vga_data <= mem[vga_addr];
         end
-        // Write memory
-        if (write) begin
-            mem[write_addr] <= write_data;
-        end
-        if (gpu_write) begin
-            mem[gpu_write_addr] <= gpu_write_data;
+
+        // Having multiple mem storing statements will break Quartus' synth, but this seems to work
+        // The CPU will never write anything while the GPU is working so this should not cause any issues
+        if (write || gpu_write) begin
+            mem[write ? write_addr : gpu_write_addr] <= write ? write_data : gpu_write_data;
         end
     end
 endmodule
