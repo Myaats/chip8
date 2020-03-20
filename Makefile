@@ -19,10 +19,10 @@ test:
 		VCD_PATH="../build/vcd/$$(basename $$f .v).vcd"; \
 		rm -rf "$$OUT_PATH"; \
 		out=$$(iverilog -o $$OUT_PATH -I src -I sim -I tests -DVCD_PATH=\"$$VCD_PATH\" $$f 2>&1); \
-		if [[ "$$out" = "" ]]; then \
+		if [ "$$out" = "" ]; then \
 			out=$$(cd src; ../$$OUT_PATH 2>&1); \
 			echo "$$out"; \
-			if [[ "$$out" == *"FAILED"* ]]; then \
+			if $$(echo $$out | grep -q "FAILED"); then \
 				exit 1; \
 			fi \
 		else \
