@@ -366,7 +366,7 @@ module cpu(input wire clk,
                     // LD F, Vx - Fx29
                     // Sets register I to the location of sprite digit Vx.
                     16'hF?29: begin
-                        next_i_reg <= 'h1b0 + (regs[x] * 5);
+                        next_i_reg <= regs[x] * 5;
                         state <= STATE_STORE_I_REG;
                     end
 

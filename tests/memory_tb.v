@@ -34,7 +34,7 @@ module memory_tb;
         mem_read <= 1;
         mem_read_addr <= 0;
         #2;
-        `assert_eq(mem_read_data, 0);
+        `assert_eq(mem_read_data, 'hF0); // First byte of font.hex
         `assert_eq(mem_read_ack, 1);
         mem_read <= 0;
         #2;

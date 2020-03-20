@@ -29,7 +29,7 @@ module memory(input wire clk,
     reg [7:0] mem[0:MEMORY_SIZE - 1];
 
     // Put the font data in the upper part of the reserved memory
-    initial $readmemh("assets/font.hex", mem, 'h14, 'h99);
+    initial $readmemh("assets/font.hex", mem, 0, 'h4F);
 
     // Main memory
     always @(posedge clk) begin

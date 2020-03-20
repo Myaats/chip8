@@ -16,15 +16,18 @@ test:
 	@for f in $(TESTBENCHES); do \
 		echo "Testing: $$f"; \
 		OUT_PATH="./build/out/$$(basename $$f .v).out"; \
-		VCD_PATH="./build/vcd/$$(basename $$f .v).vcd"; \
+		VCD_PATH="../build/vcd/$$(basename $$f .v).vcd"; \
 		rm -rf "$$OUT_PATH"; \
 		out=$$(iverilog -o $$OUT_PATH -I src -I sim -I tests -DVCD_PATH=\"$$VCD_PATH\" $$f 2>&1); \
-		if [ "$$out" = "" ]; then \
-			out=$$($$OUT_PATH 2>&1); \
-			[ "$$out" = "" ] || echo "$$out" || exit 1; \
+		if [[ "$$out" = "" ]]; then \
+			out=$$(cd src; ../$$OUT_PATH 2>&1); \
+			echo "$$out"; \
+			if [[ "$$out" == *"FAILED"* ]]; then \
+				exit 1; \
+			fi \
 		else \
 			echo "Test failure $$f: $$out"; \
-			exit; \
+			exit 1; \
 		fi \
 	done; \
 	echo "All OK"
