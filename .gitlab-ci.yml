@@ -6,10 +6,10 @@ build-sim:
     stage: build
     image: registry.gitlab.mats.sh/mats/fpga-ci-image:latest
     script:
-        - make sim
+        - /bin/bash -c "make sim"
 
 testbenches:
     stage: test
     image: registry.gitlab.mats.sh/mats/fpga-ci-image:latest
     script:
-        - make test
+        - /bin/bash -c "make test"
