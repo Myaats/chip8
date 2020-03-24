@@ -82,12 +82,18 @@ assign GPIO1[1:0] = vga_r[1:0];
 assign GPIO1[3] = vga_r[2];
 assign GPIO1[5] = vga_r[3];
 // VGA Green
-assign GPIO1[11:8] = vga_g;
+assign GPIO1[9] = vga_g[0];
+assign GPIO1[11] = vga_g[1];
+assign GPIO1[13] = vga_g[2];
+assign GPIO1[15] = vga_g[3];
 // VGA Blue
-assign GPIO1[17:14] = vga_b;
+assign GPIO1[17] = vga_b[0];
+assign GPIO1[19] = vga_b[1];
+assign GPIO1[21] = vga_b[2];
+assign GPIO1[23] = vga_b[3];
 // VGA Sync
-assign GPIO1[20] = vga_hsync;
-assign GPIO1[21] = vga_vsync;
+assign GPIO1[31] = vga_hsync;
+assign GPIO1[33] = vga_vsync;
 
 //=======================================================
 //  Structural coding
