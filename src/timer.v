@@ -12,9 +12,9 @@ module timer(input wire clk,
     reg [31:0] timer_60hz_countdown = 0;
     reg [31:0] timer_vga_countdown = 0;
 
-    parameter TIMER_CPU_TOP  = `CLOCK_SPEED / `CPU_SPEED;
-    parameter TIMER_60HZ_TOP = `CLOCK_SPEED / 60;
-    parameter TIMER_VGA_TOP  = `CLOCK_SPEED / `VGA_SPEED;
+    parameter TIMER_CPU_TOP  = (`CLOCK_SPEED / `CPU_SPEED) - 1;
+    parameter TIMER_60HZ_TOP = (`CLOCK_SPEED / 60) - 1;
+    parameter TIMER_VGA_TOP  = (`CLOCK_SPEED / `VGA_SPEED) - 1;
 
     always @(posedge clk) begin
         // CPU countdown timer for each instruction cycle
