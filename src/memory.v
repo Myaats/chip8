@@ -30,6 +30,8 @@ module memory(input wire clk,
 
     // Put the font data in the upper part of the reserved memory
     initial $readmemh("assets/font.hex", mem, 0, 'h4F);
+    // ROM for PONG
+    initial $readmemh("assets/pong.hex", mem, 'h200, 'hfff);
 
     // Main memory
     always @(posedge clk) begin
