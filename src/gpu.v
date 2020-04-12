@@ -1,12 +1,5 @@
 `include "gpu_cmd.v"
-
-`define GPU_FRAMEBUFFER_OFFSET 'h100
-`define GPU_FRAMEBUFFER_LENGTH 'hFF
-
-`define GPU_FRAMEBUFFER_WIDTH 64
-`define GPU_FRAMEBUFFER_HEIGHT 32
-
-`define get_offset_for_fb(fb_x, fb_y) ((fb_y % `GPU_FRAMEBUFFER_HEIGHT) * 4 + (fb_x % `GPU_FRAMEBUFFER_WIDTH) / 8)
+`include "gpu_utils.v"
 
 module gpu(input wire clk,
            input wire [3:0] gpu_cmd,
@@ -31,18 +24,23 @@ module gpu(input wire clk,
         STATE_DECODE_CMD = 1, 
         STATE_CLEARING = 2,
         STATE_BEGIN_LINE_DRAW = 3,
-        STATE_LOAD_SPRITE = 4,
-        STATE_LOAD_FB_LEFT = 5,
-        STATE_LOAD_FB_RIGHT = 6,
-        STATE_STORE_FB_LEFT = 7,
-        STATE_STORE_FB_RIGHT = 8;
+        STATE_LOAD_FB_LEFT = 4,
+        STATE_LOAD_FB_RIGHT = 5,
+        STATE_STORE_FB_LEFT = 6,
+        STATE_STORE_FB_RIGHT = 7,
+        STATE_FINISH_LINE = 8,
+        STATE_WAIT_CYCLE = 9;
 
     reg[7:0] state = STATE_WAIT_FOR_CMD;
-    reg [11:0] clear_left;
-    reg [7:0] lines_left;
+    reg[7:0] wait_state = STATE_WAIT_FOR_CMD;
+    reg [11:0] clear_left = 0;
+    reg [7:0] lines_left = 0;
     reg unaligned = 0;
-    reg [7:0] shift;
-    reg [15:0] current_line;
+    reg [7:0] shift = 0;
+    reg [15:0] current_line = 0;
+    reg [12:0] sprite_offset = 0;
+
+    wire [7:0] y_offset = gpu_draw_length - lines_left;
 
     // We are ready for a new command
     assign gpu_ready = state == STATE_WAIT_FOR_CMD;
@@ -67,12 +65,11 @@ module gpu(input wire clk,
                     end
                     `GPU_CMD_DRAW: begin
                         gpu_collision <= 0;
-                        lines_left <= gpu_draw_length;
+                        sprite_offset <= gpu_draw_offset;
+                        lines_left <= gpu_draw_length - 1;
                         // Setup registers for unaligned drawing
                         unaligned <= gpu_draw_x % 8 != 0;
                         shift <= gpu_draw_x % 8;
-                        gpu_mem_read <= 1;
-                        gpu_mem_read_addr <= gpu_draw_offset;
                         state <= STATE_BEGIN_LINE_DRAW;
                     end
                 endcase
@@ -88,16 +85,14 @@ module gpu(input wire clk,
             end
             // Begin drawing the line
             STATE_BEGIN_LINE_DRAW: begin
-                state <= STATE_LOAD_SPRITE;
-            end
-            STATE_LOAD_SPRITE: begin
+                //$display("%d x %d", gpu_draw_x, gpu_draw_y);
                 if (gpu_mem_read_ack) begin
                     current_line <= {gpu_mem_read_data, 8'b0} >> shift;
-
+                    wait_state <= STATE_LOAD_FB_LEFT;
+                    state <= STATE_WAIT_CYCLE;
+                end else begin
                     gpu_mem_read <= 1;
-                    gpu_mem_read_addr <= `get_offset_for_fb(gpu_draw_x, gpu_draw_y);
-
-                    state <= STATE_LOAD_FB_LEFT;
+                    gpu_mem_read_addr <= sprite_offset;
                 end
             end
             // Load the current fb values and XOR it with the sprite and compute collision
@@ -106,18 +101,21 @@ module gpu(input wire clk,
                     current_line[15:8] <= gpu_mem_read_data ^ current_line[15:8];
                     gpu_collision <= gpu_collision || (gpu_mem_read_data & current_line[15:8]);
 
-                    if (unaligned) begin
-                        gpu_mem_read <= 1;
-                        gpu_mem_read_addr <= `get_offset_for_fb(gpu_draw_x + 1, gpu_draw_y);
+                    state <= STATE_STORE_FB_LEFT;
+                end else begin
+                    gpu_mem_read <= 1;
+                    gpu_mem_read_addr <= `get_offset_for_fb(gpu_draw_x, gpu_draw_y + y_offset);
+                end
+            end
+            STATE_STORE_FB_LEFT: begin
+                gpu_mem_write <= 1;
+                gpu_mem_write_addr <= `get_offset_for_fb(gpu_draw_x, gpu_draw_y + y_offset);
+                gpu_mem_write_data <= current_line[15:8];
 
-                        state <= STATE_LOAD_FB_RIGHT;
-                    end else begin
-                        gpu_mem_write <= 1;
-                        gpu_mem_write_addr <= `get_offset_for_fb(gpu_draw_x, gpu_draw_y);
-                        gpu_mem_write_data <= current_line[15:8];
-
-                        state <= STATE_STORE_FB_LEFT;
-                    end
+                if (unaligned) begin
+                    state <= STATE_LOAD_FB_RIGHT;
+                end else begin
+                    state <= STATE_FINISH_LINE;
                 end
             end
             STATE_LOAD_FB_RIGHT: begin
@@ -125,27 +123,31 @@ module gpu(input wire clk,
                     current_line[7:0] <= gpu_mem_read_data ^ current_line[7:0];
                     gpu_collision <= gpu_collision || (gpu_mem_read_data & current_line[7:0]);
 
-                    gpu_mem_write <= 1;
-                    gpu_mem_write_addr <= `get_offset_for_fb(gpu_draw_x, gpu_draw_y);
-                    gpu_mem_write_data <= current_line[15:8];
-
-                    state <= STATE_STORE_FB_LEFT;
-                end
-            end
-            // Let the memory get written before returning
-            STATE_STORE_FB_LEFT: begin
-                if (unaligned) begin
-                    gpu_mem_write <= 1;
-                    gpu_mem_write_addr <= `get_offset_for_fb(gpu_draw_x + 1, gpu_draw_y);
-                    gpu_mem_write_data <= current_line[15:8];
-
                     state <= STATE_STORE_FB_RIGHT;
                 end else begin
-                    state <= STATE_WAIT_FOR_CMD;
+                    gpu_mem_read <= 1;
+                    gpu_mem_read_addr <= `get_offset_for_fb(gpu_draw_x + 1, gpu_draw_y + y_offset);
                 end
             end
             STATE_STORE_FB_RIGHT: begin
-                state <= STATE_WAIT_FOR_CMD;
+                gpu_mem_write <= 1;
+                gpu_mem_write_addr <= `get_offset_for_fb(gpu_draw_x + 1, gpu_draw_y + y_offset);
+                gpu_mem_write_data <= current_line[7:0];
+
+                state <= STATE_FINISH_LINE;
+            end
+            STATE_FINISH_LINE: begin
+                if (lines_left == 0) begin
+                    state <= STATE_WAIT_FOR_CMD;
+                end else begin
+                    lines_left <= lines_left - 1;
+                    sprite_offset <= sprite_offset + 1;
+                    state <= STATE_BEGIN_LINE_DRAW;
+                end
+                
+            end
+            STATE_WAIT_CYCLE: begin
+                state <= wait_state;
             end
         endcase
     end

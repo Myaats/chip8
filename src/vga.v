@@ -1,3 +1,5 @@
+`include "gpu_utils.v"
+
 `define VGA_HORIZONTAL_SIZE 640
 `define VGA_VERTICAL_SIZE 480
 
@@ -27,8 +29,8 @@ module vga(input wire clk,
            output wire vga_hsync,
            output wire vga_vsync);
 
-    reg [15:0] horizontal_count;
-    reg [15:0] vertical_count;
+    reg [15:0] horizontal_count = 0;
+    reg [15:0] vertical_count = 0;
 
     assign vga_hsync = ~((horizontal_count >= `VGA_HORIZONTAL_SYNC_START) & (horizontal_count < `VGA_HORIZONTAL_SYNC_END));
     assign vga_vsync = ~((vertical_count >= `VGA_VERTICAL_SYNC_START) & (vertical_count < `VGA_VERTICAL_SYNC_END));
@@ -37,9 +39,9 @@ module vga(input wire clk,
     wire [15:0] pixel_x = drawing ? horizontal_count - `VGA_HORIZONTAL_BLANKING_SIZE : 0;
 
     assign memory_read = drawing;
-    assign memory_addr = vertical_count * 64 + pixel_x / 8;
+    assign memory_addr = `get_offset_for_fb(pixel_x / 10, vertical_count / 10);
 
-    wire pixel_value = memory_data[(vertical_count * 64 + pixel_x) % 8];
+    wire pixel_value = memory_data[7 - (pixel_x % 8)];
 
     assign vga_r = (pixel_value && drawing) ? 'b1111 : 'b0000;
     assign vga_g = vga_r;

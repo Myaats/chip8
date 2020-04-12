@@ -3,8 +3,8 @@
 `include "platform-speficic.v"
 `include "utils.v"
 
-`define PER_CPU_TICK `CLOCK_SPEED / `CPU_SPEED + 1
-`define PER_60HZ_TICK `CLOCK_SPEED / 60 + 1
+`define PER_CPU_TICK `CLOCK_SPEED / `CPU_SPEED
+`define PER_60HZ_TICK `CLOCK_SPEED / 60
 
 module timer_tb;
     reg clk = 0;
