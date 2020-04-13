@@ -515,12 +515,14 @@ module cpu(input wire clk,
             end
 
             STATE_STORE_BCD2: begin
+                mem_write <= 1;
                 mem_write_addr <= reg_i + 1;
                 mem_write_data <= bcd_tens;
                 state <= STATE_STORE_BCD3;
             end
 
             STATE_STORE_BCD3: begin
+                mem_write <= 1;
                 mem_write_addr <= reg_i + 2;
                 mem_write_data <= bcd_ones;
                 state <= STATE_WAIT_CLK;
