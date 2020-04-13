@@ -36,12 +36,12 @@ module memory(input wire clk,
         for (i = 0; i < VRAM_SIZE; i = i + 1) begin
             vram[i] = 0;
         end
-    end
 
-    // Put the font data in the upper part of the reserved memory
-    initial $readmemh("assets/font.hex", mem, 'h0);
-    // ROM for PONG
-    initial $readmemh("assets/pong.hex", mem, 'h200);
+        // Put the font data in the upper part of the reserved memory
+        $readmemh("assets/font.hex", mem, 'h0);
+        // ROM for PONG
+        $readmemh("assets/pong.hex", mem, 'h200);
+    end
 
     wire [11:0] combined_write_addr = gpu_write ? gpu_write_addr : write_addr;
     wire [11:0] combined_write_data = gpu_write ? gpu_write_data : write_data;
