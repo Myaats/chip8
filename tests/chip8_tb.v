@@ -43,7 +43,6 @@ module cpu_tb;
     reg [15:0] keypad_value = 0;
 
     // VGA stubs
-    reg vga_mem_read = 0;
     reg [11:0] vga_mem_addr = 0;
     wire [7:0] vga_mem_data;
 
@@ -107,7 +106,6 @@ module cpu_tb;
     .gpu_write(gpu_mem_write),
     .gpu_write_addr(gpu_mem_write_addr),
     .gpu_write_data(gpu_mem_write_data),
-    .vga_read(vga_mem_read),
     .vga_addr(vga_mem_addr),
     .vga_data(vga_mem_data));
 

@@ -12,7 +12,7 @@ module keypad(input wire clk,
 
     always @(posedge clk) begin
         for (i = 0; i <= 3; i = i + 1) begin
-            value[i * 4 + current_column] <= row[i] == 1;
+            value[i * 4 + current_column] <= row[i] == 0;
         end
 
         current_column <= (current_column + 1) % 3;

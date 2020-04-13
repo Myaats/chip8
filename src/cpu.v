@@ -57,7 +57,6 @@ module cpu(input wire clk,
 
     // Memory store / read ops
     reg [7:0] memory_counter; // countdown from offset
-    reg [15:0] memory_offset;
     reg [3:0] memory_reg_end;
 
     localparam
@@ -460,7 +459,6 @@ module cpu(input wire clk,
                     // Stores V0 to Vx starting at reg I's value, I is then set to I + x + 1
                     16'hF?55: begin
                         $display("LD [I], I..I + %0d Vx - V0..V%0d, I = I + %0d + 1", x, x, x);
-                        memory_offset = reg_i;
                         memory_counter = x;
                         next_i_reg = reg_i + x + 1;
                         state <= STATE_STORE_MEMORY;
@@ -470,7 +468,6 @@ module cpu(input wire clk,
                     // Filles V0 to Vx with memory stored at reg I's value, I is then set to I + x + 1
                     16'hF?65: begin
                         $display("LD [I], V0..V%0d = I..I + %0d, I = I + %0d + 1", x, x, x);
-                        memory_offset = reg_i;
                         memory_counter = x;
                         next_i_reg = reg_i + x + 1;
                         state <= STATE_LOAD_MEMORY;

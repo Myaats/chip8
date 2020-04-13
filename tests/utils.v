@@ -7,7 +7,7 @@
 `define print_framebuffer(memory) \
     for (fb_y=0; fb_y < 32; fb_y++) begin \
         for (fb_x=0; fb_x < 64; fb_x++) begin \
-            if (memory.mem[`get_offset_for_fb(fb_x, fb_y)][7 - (fb_x % 8)]) \
+            if (memory.vram[`get_vram_offset_for_fb(fb_x, fb_y)][7 - (fb_x % 8)]) \
                 $write("██"); \
             else \
                 $write("  "); \

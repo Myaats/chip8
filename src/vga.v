@@ -3,14 +3,14 @@
 `define VGA_HORIZONTAL_SIZE 640
 `define VGA_VERTICAL_SIZE 480
 
-`define VGA_HORIZONTAL_BLANKING_SIZE 160
+`define VGA_HORIZONTAL_BLANKING_SIZE 155
 `define VGA_VERTICAL_BLANKING_SIZE 45
 
 `define VGA_HORIZONTAL_TOTAL_SIZE `VGA_HORIZONTAL_SIZE + `VGA_HORIZONTAL_BLANKING_SIZE
 `define VGA_VERTICAL_TOTAL_SIZE `VGA_VERTICAL_SIZE + `VGA_VERTICAL_BLANKING_SIZE
 
-`define VGA_HORIZONTAL_SYNC_START 16
-`define VGA_HORIZONTAL_SYNC_END 16 + 96
+`define VGA_HORIZONTAL_SYNC_START `VGA_HORIZONTAL_SIZE + 16
+`define VGA_HORIZONTAL_SYNC_END `VGA_HORIZONTAL_SIZE + 16 + 96
 
 `define VGA_VERTICAL_SYNC_START `VGA_VERTICAL_SIZE + 10
 `define VGA_VERTICAL_SYNC_END `VGA_VERTICAL_SIZE + 10 + 2
@@ -22,8 +22,7 @@ module vga(input wire clk,
            output wire [3:0] vga_g,
            output wire [3:0] vga_b,
 
-           output wire memory_read,
-           output wire [11:0] memory_addr,
+           output reg [11:0] memory_addr,
            input wire [7:0] memory_data,
 
            output wire vga_hsync,
@@ -32,16 +31,17 @@ module vga(input wire clk,
     reg [15:0] horizontal_count = 0;
     reg [15:0] vertical_count = 0;
 
-    assign vga_hsync = ~((horizontal_count >= `VGA_HORIZONTAL_SYNC_START) & (horizontal_count < `VGA_HORIZONTAL_SYNC_END));
-    assign vga_vsync = ~((vertical_count >= `VGA_VERTICAL_SYNC_START) & (vertical_count < `VGA_VERTICAL_SYNC_END));
 
-    wire drawing = horizontal_count >= `VGA_HORIZONTAL_BLANKING_SIZE && vertical_count < `VGA_VERTICAL_SIZE;
-    wire [15:0] pixel_x = drawing ? horizontal_count - `VGA_HORIZONTAL_BLANKING_SIZE : 0;
+    assign vga_hsync = (horizontal_count >= `VGA_HORIZONTAL_SYNC_START && horizontal_count < `VGA_HORIZONTAL_SYNC_END);
+    assign vga_vsync = (vertical_count >= `VGA_VERTICAL_SYNC_START && vertical_count < `VGA_VERTICAL_SYNC_END);
 
-    assign memory_read = drawing;
-    assign memory_addr = `get_offset_for_fb(pixel_x / 10, vertical_count / 10);
+    wire drawing = horizontal_count < `VGA_HORIZONTAL_SIZE && vertical_count < `VGA_VERTICAL_SIZE;
 
-    wire pixel_value = memory_data[7 - (pixel_x % 8)];
+    reg pixel_value;
+
+    // 10x upscale
+    wire [15:0] pixel_x = horizontal_count / 10;
+    wire [15:0] pixel_y = vertical_count / 15;
 
     assign vga_r = (pixel_value && drawing) ? 'b1111 : 'b0000;
     assign vga_g = vga_r;
@@ -49,11 +49,11 @@ module vga(input wire clk,
 
     always @(posedge timer_vga_tick) begin
         // Reset the horizontal counter when reaching the width + blanking size
-        if (horizontal_count == `VGA_HORIZONTAL_TOTAL_SIZE) begin
+        if (horizontal_count == `VGA_HORIZONTAL_TOTAL_SIZE - 1) begin
             horizontal_count <= 0;
 
              // Reset the vertical counter when reaching the height + blanking size
-            if (vertical_count == `VGA_VERTICAL_TOTAL_SIZE) begin
+            if (vertical_count == `VGA_VERTICAL_TOTAL_SIZE - 1) begin
                 vertical_count <= 0;
 
             // Otherwise increment the vertical counter
@@ -63,6 +63,14 @@ module vga(input wire clk,
         // Otherwise increment the horizontal counter
         end else begin
             horizontal_count <= horizontal_count + 1;
+        end
+
+        if (drawing) begin
+            pixel_value <= memory_data[7 - (pixel_x % 8)];
+            memory_addr <= `get_vram_offset_for_fb(pixel_x, pixel_y);
+        end else begin
+            pixel_value <= 0;
+            memory_addr <= 0;
         end
     end
 
