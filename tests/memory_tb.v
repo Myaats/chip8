@@ -30,15 +30,6 @@ module memory_tb;
         $dumpfile(`VCD_PATH);
         $dumpvars;
 
-        // Read offset 0
-        mem_read <= 1;
-        mem_read_addr <= 0;
-        #2;
-        `assert_eq(mem_read_data, 'hF0); // First byte of font.hex
-        `assert_eq(mem_read_ack, 1);
-        mem_read <= 0;
-        #2;
-
         // Write 0-255 on 0-4095 addrs
         for (i = 0; i < 4096; i++) begin
             mem_write <= 1;
