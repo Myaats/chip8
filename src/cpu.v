@@ -182,7 +182,7 @@ module cpu(input wire clk,
                     // SE Vx, byte - 3xkk
                     // Skips the next instruction if Vx equals kk
                     16'h3???: begin
-                        $display("SE Vx, byte - V%0d (%h) == %h", x, regs[x], kk);
+                        $display("SE Vx, byte - V%0h (%h) == %h", x, regs[x], kk);
 
                         if (regs[x] == kk)
                             pc <= pc + 4;
@@ -191,7 +191,7 @@ module cpu(input wire clk,
                     // SNE Vx, byte - 4xkk
                     // Skips the next instruction if Vx is not equal kk
                     16'h4???: begin
-                        $display("SNE Vx, byte - V%0d (%h) != %h", x, regs[x], kk);
+                        $display("SNE Vx, byte - V%0h (%h) != %h", x, regs[x], kk);
 
                         if (regs[x] != kk)
                             pc <= pc + 4;
@@ -200,7 +200,7 @@ module cpu(input wire clk,
                     // SE Vx, Vy - 5xy0
                     // Skips the next instruction if Vx equals Vy
                     16'h5??0: begin
-                        $display("SE Vx, Vy - V%0d (%h) == %h", x, regs[x], regs[y]);
+                        $display("SE Vx, Vy - V%0h (%h) == %h", x, regs[x], regs[y]);
 
                         if (regs[x] == regs[y])
                             pc <= pc + 4;
@@ -210,7 +210,7 @@ module cpu(input wire clk,
                     // Vx = kk
                     // Sets register Vx's value to kk
                     16'h6???: begin
-                        $display("LD Vx, byte - V%0d = %h", x, kk);
+                        $display("LD Vx, byte - V%0h = %h", x, kk);
 
                         next_vx_reg <= kk;
                         state <= STATE_STORE_VX_REG;
@@ -220,7 +220,7 @@ module cpu(input wire clk,
                     // Vx = Vx + kk
                     // Sets register Vx's value to Vx + kk
                     16'h7???: begin
-                        $display("ADD Vx, Vy - V%0d (%h) = V%0d (%h) + %h", x, regs[x] + kk, x, regs[x], kk);
+                        $display("ADD Vx, Vy - V%0h (%h) = V%0h (%h) + %h", x, regs[x] + kk, x, regs[x], kk);
 
                         next_vx_reg <= regs[x] + kk;
                         state <= STATE_STORE_VX_REG;
@@ -230,7 +230,7 @@ module cpu(input wire clk,
                     // Vx = Vy
                     // Sets register Vx's value to Vy
                     16'h8??0: begin
-                        $display("LD Vx, Vy - V%0d = V%0d (%h)", x, y, regs[y]);
+                        $display("LD Vx, Vy - V%0h = V%0h (%h)", x, y, regs[y]);
 
                         next_vx_reg <= regs[y];
                         state <= STATE_STORE_VX_REG;
@@ -240,7 +240,7 @@ module cpu(input wire clk,
                     // Vx = Vx OR Vy
                     // Performes bitwise OR on Vx and Vy and stores in in Vx
                     16'h8??1: begin
-                        $display("OR Vx, Vy - V%0d (%h) = V%0d (%h) OR V%0d (%h)", x, regs[x] | regs[y], x, regs[x], y, regs[y]);
+                        $display("OR Vx, Vy - V%0h (%h) = V%0h (%h) OR V%0h (%h)", x, regs[x] | regs[y], x, regs[x], y, regs[y]);
 
                         next_vx_reg <= regs[x] | regs[y];
                         state <= STATE_STORE_VX_REG;
@@ -250,7 +250,7 @@ module cpu(input wire clk,
                     // Vx = Vx AND Vy
                     // Performes bitwise AND on Vx and Vy and stores in in Vx
                     16'h8??2: begin
-                        $display("AND Vx, Vy - V%0d (%h) = V%0d (%h) AND V%0d (%h)", x, regs[x] & regs[y], x, regs[x], y, regs[y]);
+                        $display("AND Vx, Vy - V%0h (%h) = V%0h (%h) AND V%0h (%h)", x, regs[x] & regs[y], x, regs[x], y, regs[y]);
 
                         next_vx_reg <= regs[x] & regs[y];
                         state <= STATE_STORE_VX_REG;
@@ -260,7 +260,7 @@ module cpu(input wire clk,
                     // Vx = Vx XOR Vy
                     // Performes bitwise XOR on Vx and Vy and stores in Vx
                     16'h8??3: begin
-                        $display("XOR Vx, Vy - V%0d (%h) = V%0d (%h) XOR V%0d (%h)", x, regs[x] ^ regs[y], x, regs[x], y, regs[y]);
+                        $display("XOR Vx, Vy - V%0h (%h) = V%0h (%h) XOR V%0h (%h)", x, regs[x] ^ regs[y], x, regs[x], y, regs[y]);
 
                         next_vx_reg <= regs[x] ^ regs[y];
                         state <= STATE_STORE_VX_REG;
@@ -270,7 +270,7 @@ module cpu(input wire clk,
                     // Vx = Vx + Vy, VF = carry
                     // Adding up Vx and Vy and stores the result in Vx, sets VF to 1 on overflow otherwise 0
                     16'h8??4: begin
-                        $display("ADD Vx, Vy - V%0d (%h) = V%0d (%h) + V%0d (%h)", x, regs[x] + regs[y], x, regs[x], y, regs[y]);
+                        $display("ADD Vx, Vy - V%0h (%h) = V%0h (%h) + V%0h (%h)", x, regs[x] + regs[y], x, regs[x], y, regs[y]);
 
                         next_vx_reg <= regs[x] + regs[y];
                         // If it has overflown set the carry bit to 1
@@ -282,7 +282,7 @@ module cpu(input wire clk,
                     // Vx = Vx - Vy, VF = NOT borrow
                     // Subtracts Vy from Vx and stores the result in in Vx, sets VF to 1 on underflow otherwise 0
                     16'h8??5: begin
-                        $display("SUB Vx, Vy - V%0d (%h) = V%0d (%h) - V%0d (%h)", x, regs[x] - regs[y], x, regs[x], y, regs[y]);
+                        $display("SUB Vx, Vy - V%0h (%h) = V%0h (%h) - V%0h (%h)", x, regs[x] - regs[y], x, regs[x], y, regs[y]);
 
                         next_vx_reg <= regs[x] - regs[y];
                         // If it has underflowed set the carry bit to 1
@@ -294,7 +294,7 @@ module cpu(input wire clk,
                     // Vx = Vx SHR 1
                     // Sets Vx to Vy shifted right by 1, if the LSB of Vx is 1 then VF is set to 1 otherwise 0.
                     16'h8??6: begin
-                        $display("SHR Vx >> 1 - V%0d (%h) = V%0d (%h) >> 1", x, regs[x] >> 1, x, regs[x]);
+                        $display("SHR Vx >> 1 - V%0h (%h) = V%0h (%h) >> 1", x, regs[x] >> 1, x, regs[x]);
 
                         next_vx_reg <= regs[x] >> 1;
                         // Set the carry to the LSB of the Vx
@@ -306,7 +306,7 @@ module cpu(input wire clk,
                     // Vx = Vy - Vx, set VF = NOT borrow
                     // Subtracts Vx from Vy and stores the result in in Vx, sets VF to 1 on underflow otherwise 0
                     16'h8??7: begin
-                        $display("SUBN Vx, Vy - V%0d (%h) = V%0d (%h) - V%0d (%h)", x, regs[y] - regs[x], y, regs[y], x, regs[x]);
+                        $display("SUBN Vx, Vy - V%0h (%h) = V%0h (%h) - V%0h (%h)", x, regs[y] - regs[x], y, regs[y], x, regs[x]);
 
                         next_vx_reg <= regs[y] - regs[x];
                         // If it has underflowed set the carry bit to 1
@@ -318,7 +318,7 @@ module cpu(input wire clk,
                     // Vx = Vx SHL 1
                     // Sets Vx to Vy shifted left by 1, if the MSB of Vx is 1 then VF is set to 1 otherwise 0.
                     16'h8??8: begin
-                        $display("SHR Vx << 1 - V%0d (%h) = V%0d (%h) << 1", x, regs[x] << 1, x, regs[x]);
+                        $display("SHR Vx << 1 - V%0h (%h) = V%0h (%h) << 1", x, regs[x] << 1, x, regs[x]);
 
                         next_vx_reg <= regs[x] << 1;
                         // Set the carry to the LSB of the Vx
@@ -329,7 +329,7 @@ module cpu(input wire clk,
                     // SNE Vx, Vy - 9xy0
                     // Skips the next instruction if Vx does not equal Vy
                     16'h9??0: begin
-                        $display("SNE Vx, Vy - V%0d (%h) != V%0d (%h)", x, regs[x], y, regs[y]);
+                        $display("SNE Vx, Vy - V%0h (%h) != V%0h (%h)", x, regs[x], y, regs[y]);
 
                         if (regs[x] != regs[y])
                             pc <= pc + 4;
@@ -356,7 +356,7 @@ module cpu(input wire clk,
                     // Vx = (RANDOM BYTE) AND kk
                     // Sets Vx to a random byte bitwise AND'd to kk
                     16'hC???: begin
-                        $display("RNG Vx, byte - V%0d (%h) = %h & %h", x, rng_value[7:0] & kk, rng_value[7:0], kk);
+                        $display("RNG Vx, byte - V%0h (%h) = %h & %h", x, rng_value[7:0] & kk, rng_value[7:0], kk);
 
                         next_vx_reg <= rng_value[7:0] & kk;
                         state <= STATE_STORE_VX_REG;
@@ -366,7 +366,7 @@ module cpu(input wire clk,
                     // Draws a n byte long sprite located at the I reg memory location at (Vx, Xy). Pixels are copied XOR to detect collisions, if
                     // something collides set VF to 1 otherwise 0. If pixels are outside of the framebuffer will it wrap over to the other side
                     16'hD???: begin
-                        $display("DRW Vx, Vy, nibble - V%0d (%h), V%0d (%h), %0d", x, regs[x], y, regs[y], z);
+                        $display("DRW Vx, Vy, nibble - V%0h (%h), V%0h (%h), %0d", x, regs[x], y, regs[y], z);
 
                         gpu_cmd <= `GPU_CMD_DRAW;
                         gpu_draw_x <= regs[x];
@@ -380,7 +380,7 @@ module cpu(input wire clk,
                     // SKP Vx - Ex9E
                     // Skips the next instruction if the key of register Vx's value is currently down
                     16'hE?9E: begin
-                        $display("SKP Vx - V%0d (%0d), down: %0d", x, regs[x], keypad_value & (1 << (regs[x] - 1)));
+                        $display("SKP Vx - V%0h (%0d), down: %0d", x, regs[x], keypad_value & (1 << (regs[x] - 1)));
 
                         if (keypad_value & (1 << (regs[x] - 1)))
                             pc <= pc + 4;
@@ -389,7 +389,7 @@ module cpu(input wire clk,
                     // SKNP Vx - ExA1
                     // Skips the next instruction if the key of register Vx's value is currently up
                     16'hE?A1: begin
-                        $display("SKNP Vx - V%0d (%0d), down: %0d", x, regs[x], keypad_value & (1 << (regs[x] - 1)));
+                        $display("SKNP Vx - V%0h (%0d), down: %0d", x, regs[x], keypad_value & (1 << (regs[x] - 1)));
 
                         if (!(keypad_value & (1 << (regs[x] - 1))))
                             pc <= pc + 4;
@@ -398,7 +398,7 @@ module cpu(input wire clk,
                     // LD Vx, DT - Fx07
                     // Sets Vx to the Delay Timer's value
                     16'hF?07: begin
-                        $display("LD Vx, DT - V%0d = DT (%h)", x, dt);
+                        $display("LD Vx, DT - V%0h = DT (%h)", x, dt);
 
                         next_vx_reg <= dt;
                         state <= STATE_STORE_VX_REG;
@@ -415,7 +415,7 @@ module cpu(input wire clk,
                     // LD DT, Vx - Fx15
                     // Sets the Delay Timer to Vx
                     16'hF?15: begin
-                        $display("LD DT, Vx - DT = V%0d (%h)", x, regs[x]);
+                        $display("LD DT, Vx - DT = V%0h (%h)", x, regs[x]);
 
                         dt <= regs[x];
                     end
@@ -423,7 +423,7 @@ module cpu(input wire clk,
                     // LD ST, Vx - Fx18
                     // Sets the Sound Timer to Vx
                     16'hF?18: begin
-                        $display("LD ST, Vx - ST = V%0d (%h)", x, regs[x]);
+                        $display("LD ST, Vx - ST = V%0h (%h)", x, regs[x]);
 
                         st <= regs[x];
                     end
@@ -432,7 +432,7 @@ module cpu(input wire clk,
                     // I = I + Vx
                     // I is set to I + Vx
                     16'hF?1E: begin
-                        $display("ADD I, Vx - I (%h) = I (%h) + V%0d (%h)", reg_i + regs[x], reg_i, x, regs[x]);
+                        $display("ADD I, Vx - I (%h) = I (%h) + V%0h (%h)", reg_i + regs[x], reg_i, x, regs[x]);
 
                         next_i_reg <= reg_i + regs[x];
                         state <= STATE_STORE_I_REG;
@@ -441,7 +441,7 @@ module cpu(input wire clk,
                     // LD F, Vx - Fx29
                     // Sets register I to the location of sprite digit Vx.
                     16'hF?29: begin
-                        $display("LD F, Vx - I (%h) = V%0d (%h) * 5", regs[x] * 5, x, regs[x]);
+                        $display("LD F, Vx - I (%h) = V%0h (%h) * 5", regs[x] * 5, x, regs[x]);
 
                         next_i_reg <= regs[x] * 5;
                         state <= STATE_STORE_I_REG;
@@ -450,7 +450,7 @@ module cpu(input wire clk,
                     // LD B, Vx - Fx33
                     // Stores the binary coded decimal value of Vx in I, I + 1 and I + 2
                     16'hF?33: begin
-                        $display("LD B, Vx - I, I + 1, I + 2 = BCD(V%0d (%h))", x, regs[x]);
+                        $display("LD B, Vx - I, I + 1, I + 2 = BCD(V%0h (%h))", x, regs[x]);
                         bcd_input <= regs[x];
                         state <= STATE_STORE_BCD1;
                     end
@@ -458,7 +458,7 @@ module cpu(input wire clk,
                     // LD [I], Vx - Fx55
                     // Stores V0 to Vx starting at reg I's value, I is then set to I + x + 1
                     16'hF?55: begin
-                        $display("LD [I], I..I + %0d Vx - V0..V%0d, I = I + %0d + 1", x, x, x);
+                        $display("LD [I], I..I + %0d Vx - V0..V%0h, I = I + %0d + 1", x, x, x);
                         memory_counter = x;
                         next_i_reg = reg_i + x + 1;
                         state <= STATE_STORE_MEMORY;
@@ -467,7 +467,7 @@ module cpu(input wire clk,
                     // LD Vx, [I] - Fx65
                     // Filles V0 to Vx with memory stored at reg I's value, I is then set to I + x + 1
                     16'hF?65: begin
-                        $display("LD [I], V0..V%0d = I..I + %0d, I = I + %0d + 1", x, x, x);
+                        $display("LD [I], V0..V%0h = I..I + %0d, I = I + %0d + 1", x, x, x);
                         memory_counter = x;
                         next_i_reg = reg_i + x + 1;
                         state <= STATE_LOAD_MEMORY;
