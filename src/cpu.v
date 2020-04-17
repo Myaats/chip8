@@ -459,8 +459,8 @@ module cpu(input wire clk,
                     // Stores V0 to Vx starting at reg I's value, I is then set to I + x + 1
                     16'hF?55: begin
                         $display("LD [I], I..I + %0d Vx - V0..V%0h, I = I + %0d + 1", x, x, x);
-                        memory_counter = x;
-                        next_i_reg = reg_i + x + 1;
+                        memory_counter <= x;
+                        next_i_reg <= reg_i + x + 1;
                         state <= STATE_STORE_MEMORY;
                     end
 
@@ -468,8 +468,8 @@ module cpu(input wire clk,
                     // Filles V0 to Vx with memory stored at reg I's value, I is then set to I + x + 1
                     16'hF?65: begin
                         $display("LD [I], V0..V%0h = I..I + %0d, I = I + %0d + 1", x, x, x);
-                        memory_counter = x;
-                        next_i_reg = reg_i + x + 1;
+                        memory_counter <= x;
+                        next_i_reg <= reg_i + x + 1;
                         state <= STATE_LOAD_MEMORY;
                     end
                 endcase
@@ -479,25 +479,25 @@ module cpu(input wire clk,
             STATE_WAIT_CLK: begin
                 // Start a new state cycle
                 if (timer_cpu_tick) begin
-                    memory_counter = 0;
+                    memory_counter <= 0;
                     state <= STATE_BEGIN;
                 end
             end
 
             // Store the carry to VF
             STATE_STORE_CARRY_REG: begin
-                regs['hf] = next_carry;
+                regs['hf] <= next_carry;
                 state <= STATE_STORE_VX_REG;
             end
 
             // Store the Vx reg
             STATE_STORE_VX_REG: begin
-                regs[x] = next_vx_reg;
+                regs[x] <= next_vx_reg;
                 state <= STATE_WAIT_CLK;
             end
 
             STATE_STORE_I_REG: begin
-                reg_i = next_i_reg;
+                reg_i <= next_i_reg;
                 state <= STATE_WAIT_CLK;
             end
 
@@ -546,7 +546,7 @@ module cpu(input wire clk,
             end
             STATE_LOAD_MEMORY_STORE: begin
                 if (mem_read_ack) begin
-                    regs[memory_counter] = mem_read_data;
+                    regs[memory_counter] <= mem_read_data;
 
                     if (memory_counter == 0) begin
                         state <= STATE_STORE_I_REG;
@@ -570,7 +570,7 @@ module cpu(input wire clk,
                 gpu_cmd_submitted <= 0;
                 if (gpu_ready) begin
                     state <= STATE_WAIT_CLK;
-                    regs['hf] = gpu_collision;
+                    regs['hf] <= gpu_collision;
                 end
             end
 

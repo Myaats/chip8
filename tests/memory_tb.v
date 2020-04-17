@@ -12,12 +12,16 @@ module memory_tb;
     reg mem_write = 0;
     reg [11:0] mem_write_addr;
     reg [7:0] mem_write_data;
+    reg mem_gpu_read = 0;
+    reg mem_gpu_write = 0;
 
     memory memory(.clk(clk),
     .read(mem_read),
     .read_addr(mem_read_addr),
     .read_data(mem_read_data),
     .read_ack(mem_read_ack),
+    .gpu_read(mem_gpu_read),
+    .gpu_write(mem_gpu_write),
     .write(mem_write),
     .write_addr(mem_write_addr),
     .write_data(mem_write_data));
@@ -25,7 +29,7 @@ module memory_tb;
     initial
         forever #1 clk = ~clk;
 
-    integer i;
+    integer i = 0;
     initial begin
         $dumpfile(`VCD_PATH);
         $dumpvars;
@@ -47,7 +51,8 @@ module memory_tb;
             `assert_eq(mem_read_ack, 0);
             mem_read <= 1;
             mem_read_addr <= i;
-            #2 `assert_eq(mem_read_data, i % 255);
+            #2;
+            `assert_eq(mem_read_data, i % 255);
             `assert_eq(mem_read_ack, 1);
             mem_read <= 0;
             #2;
