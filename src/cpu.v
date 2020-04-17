@@ -292,7 +292,7 @@ module cpu(input wire clk,
 
                     // SHR Vx {, Vy} - 8xy6
                     // Vx = Vx SHR 1
-                    // Sets Vx to Vy shifted right by 1, if the LSB of Vx is 1 then VF is set to 1 otherwise 0.
+                    // Sets Vx to Vx shifted right by 1, if the LSB of Vx is 1 then VF is set to 1 otherwise 0.
                     16'h8??6: begin
                         $display("SHR Vx >> 1 - V%0h (%h) = V%0h (%h) >> 1", x, regs[x] >> 1, x, regs[x]);
 
@@ -316,7 +316,7 @@ module cpu(input wire clk,
 
                     // SHL Vx {, Vy} - 8xy8
                     // Vx = Vx SHL 1
-                    // Sets Vx to Vy shifted left by 1, if the MSB of Vx is 1 then VF is set to 1 otherwise 0.
+                    // Sets Vx to Vx shifted left by 1, if the MSB of Vx is 1 then VF is set to 1 otherwise 0.
                     16'h8??8: begin
                         $display("SHR Vx << 1 - V%0h (%h) = V%0h (%h) << 1", x, regs[x] << 1, x, regs[x]);
 
