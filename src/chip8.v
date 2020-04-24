@@ -122,7 +122,7 @@ module chip8(input wire clk,
     .timer_vga_tick(timer_vga_tick));
 
     // Keypad
-    keypad keypad(.clk(clk),
+    keypad keypad(.clk(timer_60hz_tick),
     .column(keypad_column),
     .row(keypad_row),
     .value(keypad_value));
