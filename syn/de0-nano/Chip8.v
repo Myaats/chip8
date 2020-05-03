@@ -77,6 +77,14 @@ assign GPIO2[3:0] = keypad_column;
 assign keypad_row[3:2] = GPIO1_IN;
 assign keypad_row[1:0] = GPIO2_IN;
 
+assign LED[7] = GPIO1_IN[0];
+assign LED[6] = GPIO1_IN[1];
+assign LED[5] = GPIO2_IN[0];
+assign LED[4] = GPIO2_IN[1];
+
+// Keypad pull-up
+assign GPIO2[32] = 1;
+
 // VGA Red
 assign GPIO1[1:0] = vga_r[1:0];
 assign GPIO1[3] = vga_r[2];
