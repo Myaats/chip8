@@ -1,4 +1,4 @@
-`include "platform-speficic.v"
+`include "platform-specific.v"
 
 `define CPU_SPEED 500 // Hertz
 `define VGA_SPEED 25_000_000 // 25 MHz

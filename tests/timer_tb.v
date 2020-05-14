@@ -1,6 +1,6 @@
 `include "timer.v"
 
-`include "platform-speficic.v"
+`include "platform-specific.v"
 `include "utils.v"
 
 `define PER_CPU_TICK `CLOCK_SPEED / `CPU_SPEED
